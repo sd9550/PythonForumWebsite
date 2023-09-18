@@ -7,7 +7,7 @@
 
         {% for post in all_posts %}
 
-        <div class="col-md-8 themed-grid-col index-style">{{ post.title }}</div>
+        <div class="col-md-8 themed-grid-col index-style"><a href="show_post/{{ post.post_id }}">{{ post.title }}</a></div>
         <div class="col-md-1 themed-grid-col index-style">{{ post.reply_count }}</div>
         <div class="col-md-3 themed-grid-col index-style">{{ post.author_id }} {{ post.date }}</div>
 

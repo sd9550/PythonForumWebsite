@@ -4,7 +4,8 @@ from flask_bootstrap import Bootstrap5
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
 from forms import CreatePostForm, CreatePostReplyForm
-from sqlalchemy import ForeignKey
+from sqlalchemy import update
+from sqlalchemy.sql import column
 from sqlalchemy.orm import relationship, mapped_column
 from sqlalchemy.exc import IntegrityError
 import datetime as dt
@@ -29,20 +30,21 @@ class User(UserMixin, db.Model):
 
 class Post(UserMixin, db.Model):
     __tablename__ = "posts"
-    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(50), nullable=False)
     body = db.Column(db.String(1000), nullable=False)
     date = db.Column(db.String(50), nullable=False)
     reply_count = db.Column(db.Integer, nullable=False)
+    last_reply = db.Column(db.String(50), nullable=False)
     author_id = db.Column(db.String(30), db.ForeignKey('users.username'), nullable=False)
 
 class Reply(UserMixin, db.Model):
     __tablename__ = "replies"
-    id = db.Column(db.Integer, primary_key=True)
+    reply_id = db.Column(db.Integer, primary_key=True)
     body = db.Column(db.String(1000), nullable=False)
     date = db.Column(db.String(50), nullable=False)
     author_id = db.Column(db.String(30), db.ForeignKey('users.username'), nullable=False)
-    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'), nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.post_id'), nullable=False)
 
 
 with app.app_context():
@@ -57,7 +59,7 @@ def load_user(user_id):
 @app.route("/", methods=["GET", "POST"])
 def home_page():
     page_title = "Home Page"
-    all_posts = db.session.query(Post).all()
+    all_posts = db.session.query(Post).order_by(Post.last_reply.desc()).all()
 
     return render_template("index.html", page_title=page_title, current_user=current_user, all_posts=all_posts)
 
@@ -121,7 +123,8 @@ def new_post():
             body=form.body.data,
             author_id=current_user.username,
             reply_count = 0,
-            date=dt.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+            date=dt.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
+            last_reply=dt.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
         )
 
         db.session.add(new_post)
@@ -133,15 +136,16 @@ def new_post():
 
 @app.route("/show_post/<int:post_id>", methods=["GET", "POST"])
 def show_post(post_id):
-    page_title = "Post"
+    page_title = f"Post {post_id}"
     form = CreatePostReplyForm()
     post = db.get_or_404(Post, post_id)
-    all_replies = db.session.execute(db.select(Reply).where(post_id == post_id)).all()
+    all_replies = db.session.execute(db.select(Reply).where(Reply.post_id == post_id)).scalars().all()
 
     if request.method == "POST":
         reply_content = form.body.data
         username = current_user.username
         date = dt.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+        new_reply_count = post.reply_count + 1
 
         reply = Reply(
             body=reply_content,
@@ -150,8 +154,12 @@ def show_post(post_id):
             post_id=post_id
         )
 
-        db.session.add(Reply)
+        db.session.query(Post).filter(Post.post_id == post_id).update({'last_reply': date})
+        db.session.query(Post).filter(Post.post_id == post_id).update({'reply_count': new_reply_count})
+        db.session.add(reply)
         db.session.commit()
+
+        return redirect(f"{post_id}")
 
     return render_template("show_post.html", page_title=page_title, post=post, replies=all_replies, form=form, current_user=current_user)
 
