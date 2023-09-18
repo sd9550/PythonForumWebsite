@@ -1,0 +1,22 @@
+div#main-content {
+    width: 80%;
+    margin: 0 auto;
+}
+
+div#form-content {
+    width: 30%;
+    min-width: 300px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+div.index-style {
+    background-color: #f2f2f2;
+    padding: 5px 0;
+    margin: 5px 0;
+}
+
+.logout {
+    color: white;
+    text-decoration: none;
+}
