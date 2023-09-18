@@ -1,11 +1,9 @@
-import datetime
-
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap5
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
-from forms import CreatePostForm
+from forms import CreatePostForm, CreatePostReplyForm
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship, mapped_column
 from sqlalchemy.exc import IntegrityError
@@ -34,8 +32,17 @@ class Post(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(50), nullable=False)
     body = db.Column(db.String(1000), nullable=False)
-    date = db.Column(db.String(50), nullable=True)
-    author_id = db.Column(db.String(30), db.ForeignKey('users.username'))
+    date = db.Column(db.String(50), nullable=False)
+    reply_count = db.Column(db.Integer, nullable=False)
+    author_id = db.Column(db.String(30), db.ForeignKey('users.username'), nullable=False)
+
+class Reply(UserMixin, db.Model):
+    __tablename__ = "replies"
+    id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.String(1000), nullable=False)
+    date = db.Column(db.String(50), nullable=False)
+    author_id = db.Column(db.String(30), db.ForeignKey('users.username'), nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'), nullable=False)
 
 
 with app.app_context():
@@ -84,6 +91,7 @@ def register_page():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
+        page_title = "Register"
         username = request.form.get("usernameInput")
         password = request.form.get("passwordInput")
         result = db.session.execute(db.select(User).where(User.username == username))
@@ -91,10 +99,10 @@ def login():
 
         if not user:
             error = "Username was not found"
-            return redirect(url_for("home_page", error=error))
+            return render_template("register.html", error=error, page_title=page_title)
         elif not check_password_hash(user.password, password):
             error = "Password is incorrect"
-            return redirect(url_for("home_page", error=error))
+            return render_template("register.html", error=error, page_title=page_title)
         else:
             login_user(user)
             return redirect(url_for("home_page"))
@@ -112,7 +120,8 @@ def new_post():
             title=form.title.data,
             body=form.body.data,
             author_id=current_user.username,
-            date=dt.datetime.today().strftime("%B %d, %Y")
+            reply_count = 0,
+            date=dt.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
         )
 
         db.session.add(new_post)
@@ -120,6 +129,31 @@ def new_post():
         return redirect(url_for("home_page"))
 
     return render_template("new_post.html", page_title=page_title, form=form)
+
+
+@app.route("/show_post/<int:post_id>", methods=["GET", "POST"])
+def show_post(post_id):
+    page_title = "Post"
+    form = CreatePostReplyForm()
+    post = db.get_or_404(Post, post_id)
+    all_replies = db.session.execute(db.select(Reply).where(post_id == post_id)).all()
+
+    if request.method == "POST":
+        reply_content = form.body.data
+        username = current_user.username
+        date = dt.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+
+        reply = Reply(
+            body=reply_content,
+            author_id=username,
+            date=date,
+            post_id=post_id
+        )
+
+        db.session.add(Reply)
+        db.session.commit()
+
+    return render_template("show_post.html", page_title=page_title, post=post, replies=all_replies, form=form, current_user=current_user)
 
 
 @app.route("/logout")

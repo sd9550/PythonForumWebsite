@@ -16,6 +16,11 @@ div.index-style {
     margin: 5px 0;
 }
 
+p.login-error {
+    color: red;
+    margin-right: 10px;
+}
+
 .logout {
     color: white;
     text-decoration: none;
