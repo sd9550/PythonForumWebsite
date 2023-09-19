@@ -10,10 +10,19 @@ div#form-content {
     text-align: center;
 }
 
+div#user-posts {
+    margin: 0 auto;
+    width: 50%;
+}
+
 div.index-style {
     background-color: #f2f2f2;
     padding: 5px;
     margin: 5px 0;
+}
+
+div.post-buffer {
+    margin-bottom: 15px;
 }
 
 p.login-error {

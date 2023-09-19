@@ -4,11 +4,11 @@
 <div id="main-content">
     <div class="row mb-3">
     <div class="col-md-12 themed-grid-col index-style">{{ post.title }} | {{ post.author_id }} | {{ post.date }}</div>
-    <div class="col-md-12 themed-grid-col index-style">{{ post.body }}</div>
+    <div class="col-md-12 themed-grid-col index-style post-buffer">{{ post.body }}</div>
 
     {% for reply in replies %}
         <div class="col-md-12 themed-grid-col index-style">{{ reply.author_id }} | {{ reply.date }}</div>
-        <div class="col-md-12 themed-grid-col index-style">{{ reply.body }}</div>
+        <div class="col-md-12 themed-grid-col index-style post-buffer">{{ reply.body }}</div>
     {% endfor %}
     </div>
 </div>

@@ -4,9 +4,6 @@ from flask_bootstrap import Bootstrap5
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
 from forms import CreatePostForm, CreatePostReplyForm
-from sqlalchemy import update
-from sqlalchemy.sql import column
-from sqlalchemy.orm import relationship, mapped_column
 from sqlalchemy.exc import IntegrityError
 import datetime as dt
 import os
@@ -163,6 +160,15 @@ def show_post(post_id):
 
     return render_template("show_post.html", page_title=page_title, post=post, replies=all_replies, form=form, current_user=current_user)
 
+
+@app.route("/my_posts")
+@login_required
+def my_posts():
+    page_title = "My Posts"
+    query = db.session.execute(db.select(Post).where(Post.author_id == current_user.username))
+    posts = query.scalars().all()
+
+    return render_template("my_posts.html", page_title=page_title, posts=posts, current_user=current_user)
 
 @app.route("/logout")
 @login_required
