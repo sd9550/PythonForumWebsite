@@ -30,6 +30,10 @@ p.login-error {
     margin-right: 10px;
 }
 
+.edit-form-space {
+    margin: 10px 0;
+}
+
 .logout {
     color: white;
     text-decoration: none;

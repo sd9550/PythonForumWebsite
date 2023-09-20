@@ -170,6 +170,35 @@ def my_posts():
 
     return render_template("my_posts.html", page_title=page_title, posts=posts, current_user=current_user)
 
+@app.route("/delete/<int:post_id>", methods=["GET", "POST"])
+@login_required
+def delete_post(post_id):
+    post_to_delete = db.get_or_404(Post, post_id)
+
+    db.session.delete(post_to_delete)
+    db.session.commit()
+
+    return redirect(url_for("my_posts"))
+
+
+@app.route("/edit/<int:post_id>", methods=["GET", "POST"])
+@login_required
+def edit_post(post_id):
+    page_title = "Edit Post"
+    post_to_edit = db.get_or_404(Post, post_id)
+
+    if request.method == "POST":
+        new_title = request.form.get("titleContent")
+        new_body = request.form.get("bodyContent")
+
+        db.session.query(Post).filter(Post.post_id == post_id).update({'title': new_title})
+        db.session.query(Post).filter(Post.post_id == post_id).update({'body': new_body})
+        db.session.commit()
+
+        return redirect(url_for("my_posts"))
+
+    return render_template("edit_post.html", page_title=page_title, post=post_to_edit, current_user=current_user)
+
 @app.route("/logout")
 @login_required
 def logout():

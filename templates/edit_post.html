@@ -1,0 +1,12 @@
+{% include "header.html" %}
+
+<div id="form-content">
+  <form action="/edit/{{ post.post_id }}" method="post">
+  <input class="edit-form-space"  type="text" id="titleContent" name="titleContent" value="{{ post.title }}" size="50" required>
+  <textarea class="edit-form-space"  id="bodyContent" name="bodyContent" rows="10" cols="50" required>{{ post.body }}</textarea>
+    <input class="edit-form-space" type="submit" value="Submit">
+    </form>
+</div>
+
+</body>
+</html>

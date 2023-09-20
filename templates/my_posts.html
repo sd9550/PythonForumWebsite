@@ -4,7 +4,7 @@
 {% for post in posts %}
     <div class="row mb-3">
         <div class="col-md-6 themed-grid-col index-style">{{ post.title }}</div>
-        <div class="col-md-2 themed-grid-col index-style">Edit | Delete</div>
+        <div class="col-md-2 themed-grid-col index-style"><a href="/edit/{{ post.post_id }}">Edit</a> | <a href="/delete/{{ post.post_id }}">Delete</a></div>
     </div>
 {% endfor %}
 </div>
